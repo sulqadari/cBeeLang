@@ -2,6 +2,7 @@
     #define BEELANG_CHUNK_H
 
     #include "common.h"
+    #include "value.h"
 
     
     /// @brief Each instruction has a one-byte operation code (opcode)
@@ -9,7 +10,8 @@
     /// add, subtract, look up variable, etc.
     typedef enum
     {
-        OP_RETURN, // return from the current function
+        OP_CONSTANT,    // produce a particular constant
+        OP_RETURN,      // return from the current function
     } OpCode;
 
     /// @brief Dynamic array to store a portion of instructions and associated
@@ -29,6 +31,7 @@
         int count;      // total quantity of elements are actually in use.
         int capacity;   // number of elements in the array we have allocated.
         uint8_t* code;  // dynamic array which stores a chunk of bytes.
+        ValueArray constants;   // Chunk's constants pool
     }Chunk;
 
     /// @brief initializes a given dynamic array to keep instructions set
@@ -43,5 +46,11 @@
     /// @param chunk dynamic array
     /// @param byte kind of instruction
     void writeChunk(Chunk* chunk, uint8_t byte);
+
+    /// @brief Writes the constant into chunk's constant pool.
+    /// @param chunk 
+    /// @param value 
+    /// @return the index where the constant was appended.
+    int addConstant(Chunk* chunk, Value value);
 
 #endif // BEELANG_CHUNK_H
