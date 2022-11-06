@@ -3,15 +3,20 @@
 
     #include "common.h"
 
-    ///Calculates a new capacity based on a given current capacity.
-    #define GROW_CAPACITY(capacity) ( (capacity) < 8 ? 8 : (capacity) * 2 )
+    /// @brief Calculates a new capacity based on a given current capacity.
+    #define GROW_CAPACITY(capacity) ( ((capacity) < 8) ? 8 : ((capacity) * 2) )
 
+    /// @brief create/grow array to the given size.
+    /// This macro takes care of getting the size of the array's elements
+    /// and casting the size of the array's element type and casting the
+    /// resulting void* back to a pointer of the right type.
     #define GROW_ARRAY(type, pointer, oldCount, newCount) \
                         (type*)reallocate(pointer, \
                                         sizeof(type) * (oldCount), \
                                         sizeof(type) * (newCount))
 
-    /// Frees the memory by passing in zero for the newSize
+    /// @brief Frees the memory by passing in zero for the newSize.
+    
     #define FREE_ARRAY(type, pointer, oldCount) \
                         reallocate(pointer, sizeof(type) * (oldCount), 0)
 
@@ -20,10 +25,12 @@
     /// Routing all of those operations through a single function is important
     /// for garbage collector that needs to keep track of how much memory
     /// is in use.
-    /// If oldsize == 0 and newSize > 0: allocate new block;
-    /// If oldsize > 0 and newSize == 0: Free allocation;
-    /// If 0 < oldsize < newSize : allocate new block;
-    /// If 0 < oldsize > newSize : grow existing allocation;
+    /// * oldsize == 0 & newSize > 0: allocate new block;
+    /// * oldsize > 0 & newSize == 0: free allocation;
+    /// * 0 > oldsize > newSize:      shrink existing allocation;
+    /// * 0 > oldsize < newSize:      grow existing allocation;
+    /// Except the first case, all others rely on the C standard library's realloc() function.
+    /// 
     /// @param pointer dynamic array
     /// @param oldSize old size
     /// @param newSize new size

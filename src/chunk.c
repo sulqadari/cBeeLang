@@ -2,20 +2,24 @@
 #include "../includes/chunk.h"
 #include "../includes/memory.h"
 
-void initChunk(Chunk* chunk) {
+void initChunk(Chunk* chunk)
+{
     chunk->count = 0;
     chunk->capacity = 0;
     chunk->code = NULL;
 }
 
-void freeChunk(Chunk* chunk) {
+void freeChunk(Chunk* chunk)
+{
     FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
     initChunk(chunk);
 }
 
-void writeChunk(Chunk* chunk, uint8_t byte) {
+void writeChunk(Chunk* chunk, uint8_t byte)
+{
     //if array is full..
-    if (chunk->capacity < chunk->count + 1) {
+    if (chunk->capacity < chunk->count + 1)
+    {
         int oldCapacity = chunk->capacity;
         chunk->capacity = GROW_CAPACITY(oldCapacity);   // ..increase capacity indicator..
         //..and grow array for that size
