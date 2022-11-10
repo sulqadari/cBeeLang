@@ -7,6 +7,16 @@ void initValueArray(ValueArray* array)
     array->values = NULL;
     array->capacity = 0;
     array->count = 0;
+
+}
+
+void freeValueArray(ValueArray* array)
+{
+    FREE_ARRAY(Value, array->values, array->capacity);
+    ///TODO: this freeValueArray() is called from freeChunk() which after
+    // that calls initChunk() where the below method is called.
+    // looks like this call is redundant.
+    initValueArray(array);
 }
 
 void writeValueArray(ValueArray* array, Value value)
@@ -22,11 +32,6 @@ void writeValueArray(ValueArray* array, Value value)
     array->count++;
 }
 
-void freeValueArray(ValueArray* array)
-{
-    FREE_ARRAY(Value, array->values, array->capacity);
-    initValueArray(array);
-}
 
 void printValue(Value value)
 {

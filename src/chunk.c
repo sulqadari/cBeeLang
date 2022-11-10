@@ -7,28 +7,31 @@ void initChunk(Chunk* chunk)
     chunk->count = 0;
     chunk->capacity = 0;
     chunk->code = NULL;
+    chunk->lines = NULL;
     initValueArray(&chunk->constants);
 }
 
 void freeChunk(Chunk* chunk)
 {
     FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
+    FREE_ARRAY(int, chunk->lines, chunk->capacity);
     freeValueArray(&chunk->constants);
     initChunk(chunk);
 }
 
-void writeChunk(Chunk* chunk, uint8_t byte)
+void writeChunk(Chunk* chunk, uint8_t byte, int line)
 {
-    //if array is full..
-    if (chunk->capacity < chunk->count + 1)
+    if ((chunk->count + 1) > chunk->capacity)   // if array hasn't capacity for the new byte..
     {
         int oldCapacity = chunk->capacity;
         chunk->capacity = GROW_CAPACITY(oldCapacity);   // ..increase capacity indicator..
         //..and grow array for that size
         chunk->code = GROW_ARRAY(uint8_t, chunk->code, oldCapacity, chunk->capacity);
+        chunk->lines = GROW_ARRAY(int, chunk->lines, oldCapacity, chunk->capacity);
     }
 
     chunk->code[chunk->count] = byte;
+    chunk->lines[chunk->count] = line;  // keep track of each byte resides at which line.
     chunk->count++;
 }
 
