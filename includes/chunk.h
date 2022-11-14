@@ -14,7 +14,11 @@
     typedef enum
     {
         OP_CONSTANT,    // load a constant for use: [load, idx]
-        OP_CONSTANT_W,  // load a constant for use: [load, idx_w]
+        OP_ADD,         //
+        OP_SUBTRACT,
+        OP_MULTIPLY,
+        OP_DIVIDE,
+        OP_NEGATE,      // negate value
         OP_RETURN,      // return from the current function: [return]
     } OpCode;
 

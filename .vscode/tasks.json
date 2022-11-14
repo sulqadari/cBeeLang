@@ -10,7 +10,7 @@
                 "${workspaceFolder}\\src\\*.c", // add to build task all .c files residing in src folder 
                 //"${file}",    //substituted by previous line
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${workspaceFolder}\\BeeLang.exe"
             ],
             "options": {
                 "cwd": "${fileDirname}"

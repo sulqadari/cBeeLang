@@ -2,6 +2,8 @@
     "files.associations": {
         "chunk.h": "c",
         "common.h": "c",
-        "debug.h": "c"
+        "debug.h": "c",
+        "value.h": "c",
+        "vm.h": "c"
     }
 }
