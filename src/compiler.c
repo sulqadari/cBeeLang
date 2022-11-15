@@ -4,12 +4,13 @@
 
 void compile(const char* source)
 {
+    Token token;
     initScanner(source);
     
     int line = -1;
     for (;;)
     {
-        Token token = scanToken();
+        token = scanToken();
         if (token.line != line)
         {
             printf("%4d ", token.line);

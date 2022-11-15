@@ -19,7 +19,7 @@
      */
     typedef struct
     {
-        int capacity;   // number of elements in the array we have allocated.
+        int capacity;   // available space in the array.
         int count;      // total quantity of elements are actually in use.
         Value* values;  // the double values array
     }ValueArray;

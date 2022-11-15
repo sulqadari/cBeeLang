@@ -14,24 +14,24 @@
     typedef enum
     {
         OP_CONSTANT,    // load a constant for use: [load, idx]
-        OP_ADD,         //
-        OP_SUBTRACT,
-        OP_MULTIPLY,
-        OP_DIVIDE,
+        OP_ADD,         // addition
+        OP_SUBTRACT,    // subtraction
+        OP_MULTIPLY,    // multiplication
+        OP_DIVIDE,      // division
         OP_NEGATE,      // negate value
         OP_RETURN,      // return from the current function: [return]
     } OpCode;
 
     /**
-     * @brief Chunk - a sequence of bytecode. This structure
+     * @brief Chunk - a sequence of bytecodes. This structure
      * represents a dynamic array of instructions.
      * 
      */
     typedef struct
     {
         int count;      // total quantity of elements are actually in use.
-        int capacity;   // number of elements in the array we have allocated.
-        uint8_t* code;  // dynamic array which stores a chunk of bytes 
+        int capacity;   // available space in the array.
+        uint8_t* code;  // array which stores a chunk of bytes 
         int* lines;     // keeps track of line numbers of the offending source code (exactly parallels the bytecode array).
         ValueArray constants;   // Chunk's constant pool
     }Chunk;
@@ -44,10 +44,10 @@
     void initChunk(Chunk* chunk);
 
     /**
-     * @brief Appends instruciton to the end of the chunk.
+     * @brief Appends an instruciton to the end of the chunk.
      * 
      * @param chunk pointer to Chunk structure
-     * @param byte bytecode
+     * @param byte bytecode to be appended
      * @param line the tracker of the line at which an error have occured.
      */
     void writeChunk(Chunk* chunk, uint8_t byte, int line);

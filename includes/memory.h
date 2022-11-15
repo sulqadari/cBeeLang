@@ -47,11 +47,17 @@
      * Routing all of those operations through a single function is important
      * for garbage collector that needs to keep track of how much memory
      * is in use.
+     * 
      * case 1: oldsize == 0 & newSize > 0: allocate new block (behaves exactly as malloc());
+     * 
      * case 2: oldsize > 0 & newSize == 0: free allocation;
+     * 
      * case 3: 0 > oldsize > newSize:      shrink existing allocation;
+     * 
      * case 4: 0 > oldsize < newSize:      grow existing allocation;
+     * 
      * Except the case 2, all others rely on the C standard library's realloc() function.
+     * 
      * @param pointer a pointer to dynamic array of Chunk structure
      * @param oldSize old size of capacity
      * @param newSize new size of capacity

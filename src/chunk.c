@@ -24,8 +24,8 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line)
     if ((chunk->count + 1) > chunk->capacity)   // if array hasn't capacity for the new byte..
     {
         int oldCapacity = chunk->capacity;
-        chunk->capacity = GROW_CAPACITY(oldCapacity);   // ..increase capacity indicator..
-        //..and grow array for that size
+        chunk->capacity = GROW_CAPACITY(oldCapacity);   // ..increase chunk's 'capacity' by 2..
+        //..and grow chunk's 'code' for capacity's size
         chunk->code = GROW_ARRAY(uint8_t, chunk->code, oldCapacity, chunk->capacity);
         chunk->lines = GROW_ARRAY(int, chunk->lines, oldCapacity, chunk->capacity);
     }

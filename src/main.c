@@ -3,6 +3,16 @@
 #include "../includes/debug.h"
 #include "../includes/vm.h"
 
+/**
+ * @brief Stops execution. The analogous of system("pause") in C++
+ * 
+ */
+static void idle_exec()
+{
+    printf("Press any key to continue...");
+    getchar();
+}
+
 static void repl()
 {
     char line[1024];
@@ -90,6 +100,6 @@ int main(int argc, const char* argv[])
     }
     freeVM();   // kill VM
 
-    idle_exec("pause", sizeof ("pause"));
+    idle_exec();
     return 0;
 }

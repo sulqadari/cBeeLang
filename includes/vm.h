@@ -59,20 +59,4 @@
      */
     Value pop();
 
-    /**
-     * @brief Helper function which actually runs the bytecode.
-     * Within outer infinite for loop VM reads and executes a single bytecode
-     * instruction.
-     * The READ_BYTE macro reads the byte currently pointed at by ip and then
-     * advances the instruction pointer.
-     * @return InterpretResult 
-     */
-    static InterpretResult run();
-
-    /**
-     * @brief 
-     * 
-     */
-    static void resetStack();
-
 #endif //BEELANG_VM_H

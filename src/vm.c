@@ -12,6 +12,15 @@
  */
 VM vm;
 
+/**
+ * @brief Set stackTop to point to the beginning of the array to indicate
+ * that the stack is empty
+ */
+static void resetStack()
+{
+    vm.stackTop = vm.stack;
+}
+
 void initVM()
 {
     resetStack();
@@ -22,6 +31,14 @@ void freeVM()
 
 }
 
+/**
+ * @brief Helper function which actually runs the bytecode.
+ * Within outer infinite for loop VM reads and executes a single bytecode
+ * instruction.
+ * The READ_BYTE macro reads the byte currently pointed at by ip and then
+ * advances the instruction pointer.
+ * @return InterpretResult 
+ */
 InterpretResult interpret(const char* source)
 {
     compile(source);
@@ -56,23 +73,22 @@ static InterpretResult run()
     uint8_t instruction;
     for(;;)
     {
-        #ifdef DEBUG_TRACE_EXECUTION
-            printf("          ");
+#ifdef DEBUG_TRACE_EXECUTION
+        printf("          ");
 
-            for(Value* slot = vm.stack; slot < vm.stackTop; slot++)
-            {
-                printf("[ ");
-                printValue(*slot);
-                printf(" ]");
-            }
-            printf("\n");
+        for(Value* slot = vm.stack; slot < vm.stackTop; slot++)
+        {
+            printf("[ ");
+            printValue(*slot);
+            printf(" ]");
+        }
+        printf("\n");
 
-            // vm.ip is incremented each time it goes through this loop.  
-            // convert vm.ip back to a relative offset from the beggining of the bytecode.
-            // using pointer math: current pointer - initial pointer
-            disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
-        #endif
-
+        // vm.ip is incremented each time it goes through this loop.  
+        // convert vm.ip back to a relative offset from the beggining of the bytecode.
+        // using pointer math: current pointer - initial pointer
+        disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
+#endif
         // instruction decoding:
         // the body of each case implements opcode's behavior
         switch (instruction = READ_BYTE())
@@ -100,11 +116,4 @@ static InterpretResult run()
     #undef READ_BYTE
     #undef READ_CONSTANT
     #undef BINARY_OP
-}
-
-static void resetStack()
-{
-    // set stackTop to point to the beggining of the array to indicate
-    // that the stack si empty.
-    vm.stackTop = vm.stack;
 }

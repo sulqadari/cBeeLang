@@ -32,7 +32,9 @@ static char peek()
 
 static char peekNext()
 {
-    if (isAtEnd()) return '\0';
+    if (isAtEnd())
+        return '\0';
+    
     return scanner.current[1];
 }
 
@@ -46,8 +48,12 @@ static char peekNext()
  */
 static bool match(char expected)
 {
-    if (isAtEnd()) return false;
-    if (*scanner.current != expected) return false;
+    if (isAtEnd())
+        return false;
+    
+    if (*scanner.current != expected)
+        return false;
+    
     scanner.current++;
     return true;
 }
@@ -108,7 +114,7 @@ static TokenType checkKeyword(int start, int length, const char* rest, TokenType
     // the lexeme must be exactly as long as the keyword and..
     if (((scanner.current - scanner.start) == (start + length)) &&
     //..the remaining characters must match exactly
-        memcmp(scanner.start + start, rest, length) == 0)
+         (memcmp(scanner.start + start, rest, length) == 0))
     {
         return type;
     }
@@ -164,44 +170,22 @@ static TokenType identifierType()
     return TOKEN_IDENTIFIER;
 }
 
-static Token identifier()
-{
-    while (isAlpha(peek()) || isDigit(peek()))
-        advance();
-    
-    return makeToken(identifierType());
-}
-
-static Token number()
-{
-    while(isDigit(peek()))
-        advance();
-    
-    // look for a fractional part.
-    if (peek() == '.' && isDigit(peekNext()))
-    {
-        advance();
-
-        while(isDigit(peek()))
-            advance();
-    }
-
-    return makeToken(TOKEN_NUMBER);
-}
-
 static Token string()
 {
     while(peek() != '"' && !isAtEnd())
     {
-        if (peek() == '\n') scanner.line++;
+        if (peek() == '\n')
+            scanner.line++;
         
         advance();
     }
 
-    if (isAtEnd()) return errorToken("Unterminated string.");
+    if (isAtEnd())
+        return errorToken("Unterminated string.");
 
     // consume the closing double quote.
     advance();
+
     return makeToken(TOKEN_STRING);
 }
 
@@ -222,6 +206,31 @@ static bool isAlpha(char c)
 static bool isDigit(char c)
 {
     return c >= '0' && c <= '9';
+}
+
+static Token number()
+{
+    while(isDigit(peek()))
+        advance();
+    
+    // look for a fractional part.
+    if ((peek() == '.') && isDigit(peekNext()))
+    {
+        advance();
+
+        while(isDigit(peek()))
+            advance();
+    }
+
+    return makeToken(TOKEN_NUMBER);
+}
+
+static Token identifier()
+{
+    while (isAlpha(peek()) || isDigit(peek()))
+        advance();
+    
+    return makeToken(identifierType());
 }
 
 Token scanToken()
