@@ -40,9 +40,9 @@ static char* readFile(const char* path)
         exit(74);
     }
 
-    fseek(file, 0L, SEEK_END);      // move file's pointer to the very end
+    fseek(file, 0L, SEEK_END);      // move file pointer to the very end
     size_t fileSize = ftell(file);  // retrieve the value of the file's pointer
-    rewind(file);                   // rewind back to the beginning.
+    rewind(file);                   // roll back the file pointer to its very beginning.
 
     char* buffer = (char*)malloc(fileSize + 1); // allocate string gor that size + '\0'
 
@@ -52,11 +52,13 @@ static char* readFile(const char* path)
         exit(74);
     }
 
-    size_t bytesRead = fread(buffer, sizeof(char), fileSize, file); // read file
+    /* Read from 'file' the 'fileSize' amount of values of size 'char' and store them into the 'buffer'.*/
+    size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
 
+    // if we didn't succeed in reading the whole bunch of input data..
     if (bytesRead < fileSize)
     {
-        fprintf(stderr, "Couldn't read file \"%s\".\n", path);
+        fprintf(stderr, "Error: Couldn't read file \"%s\".\n", path);
         exit(74);
     }
 
@@ -70,6 +72,8 @@ static void runFile(const char* path)
 {
     char* source = readFile(path);
     InterpretResult result = interpret(source);
+    
+    ///NOTE: crucially important: do not release source code until we done with interpretation!
     free(source);
 
     if (INTERPRET_COMPILE_ERROR == result) exit(65);
@@ -95,9 +99,10 @@ int main(int argc, const char* argv[])
         runFile(argv[1]);
     }else
     {
-        fprintf(stderr, "Usage: BeeLang.exe [path]\n");
+        fprintf(stderr, "Usage: BeeLang.exe [path\\to\\script]\n");
         exit(64);
     }
+
     freeVM();   // kill VM
 
     idle_exec();

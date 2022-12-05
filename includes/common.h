@@ -10,6 +10,7 @@
     #include <stdlib.h>
     #include <string.h>
 
+    #define DEBUG_PRINT_CODE
     // if defined the VM disassembles and prints each instruction right before executing it.
     #define DEBUG_TRACE_EXECUTION
 

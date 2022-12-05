@@ -7,6 +7,11 @@ typedef struct
     int line;               // tracks what line the current lexeme is on.
 }Scanner;
 
+/**
+ * @brief The Scanner's Global Variable.
+ * This object parses sequence of user's input represented as source code
+ * and passes it to the compiler module
+ */
 Scanner scanner;
 
 static bool isAtEnd()

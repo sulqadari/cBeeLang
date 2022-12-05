@@ -27,7 +27,7 @@
 
     typedef struct
     {
-        TokenType type;
+        TokenType type;     // token type enum
         const char* start;
         int length;
         int line;
@@ -36,8 +36,12 @@
     void initScanner(const char* source);
 
     /**
-     * @brief Each call to this cunction scans a complete token.
+     * @brief Each call to this function scans a complete token.
      * When we enter into in we start at the beginning of a new token.
+     * 
+     * Note: its implementation doesn't report lexical errors, it just
+     * returns TOKEN_ERROR and leaves it up to the to the Parser
+     * to report them.
      * @return Token 
      */
     Token scanToken();

@@ -6,7 +6,7 @@
 
 
 /**
- * @brief Current virtual machine.
+ * @brief The VM's Global Variable.
  * Instead of passing pointer to VM around functions,
  * the global instance is declared to keep code clearer.
  */
@@ -31,20 +31,6 @@ void freeVM()
 
 }
 
-/**
- * @brief Helper function which actually runs the bytecode.
- * Within outer infinite for loop VM reads and executes a single bytecode
- * instruction.
- * The READ_BYTE macro reads the byte currently pointed at by ip and then
- * advances the instruction pointer.
- * @return InterpretResult 
- */
-InterpretResult interpret(const char* source)
-{
-    compile(source);
-    return INTERPRET_OK;
-}
-
 void push(Value value)
 {
     *vm.stackTop = value;   // dereference stackTop and assign it with value
@@ -57,6 +43,11 @@ Value pop()
     return *vm.stackTop;
 }
 
+/**
+ * @brief This is the core function of the VM.
+ * 
+ * @return InterpretResult 
+ */
 static InterpretResult run()
 {
     #define READ_BYTE() (*vm.ip++)  // advance instruction pointer
@@ -116,4 +107,34 @@ static InterpretResult run()
     #undef READ_BYTE
     #undef READ_CONSTANT
     #undef BINARY_OP
+}
+
+/**
+ * @brief Helper function which actually runs the bytecode.
+ * Within outer infinite for loop VM reads and executes a single bytecode
+ * instruction.
+ * The READ_BYTE macro reads the byte currently pointed at by ip and then
+ * advances the instruction pointer.
+ * @return InterpretResult 
+ */
+InterpretResult interpret(const char* source)
+{
+    Chunk chunk;
+    // init the chunk
+    initChunk(&chunk);
+
+    //pass it over to compiler
+    if (!compile(source, &chunk))
+    {
+        freeChunk(&chunk);
+        return INTERPRET_COMPILE_ERROR;
+    }
+
+    // send the completed chunk over to the VM to be executed.
+    vm.chunk = &chunk;
+    vm.ip = vm.chunk->code;
+
+    InterpretResult result = run();
+    freeChunk(&chunk);
+    return result;
 }
