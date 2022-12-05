@@ -16,6 +16,7 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize)
         if (oldSize < newSize): increase the size
     */
     void* result = realloc(pointer, newSize);
+    
     if (NULL == result)
     {
         exit(1);

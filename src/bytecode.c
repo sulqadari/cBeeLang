@@ -20,6 +20,7 @@ void appendBytecode(Bytecode *bytecode, uint8_t byte)
     if (bytecode->capacity < bytecode->count + 1)
     {
         int prevSize = bytecode->capacity;
+        
         bytecode->capacity = INCREASE_CAPACITY(prevSize);
         bytecode->code = INCREASE_ARRAY(uint8_t, bytecode->code,
                                         prevSize, bytecode->capacity);
