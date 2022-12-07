@@ -32,7 +32,7 @@ void initConstantPool(ConstantPool *constantPool);
 void freeConstantPool(ConstantPool *constantPool);
 
 /*
-    Prints a given value. Used in debug.c
+    Prints a given value. Used for debugging purposes
 */
 void printValue(Double value);
 

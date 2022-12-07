@@ -13,8 +13,13 @@
 */
 typedef enum
 {
-    OP_CONSTANT_LONG,   // load three-byte constant from ConstantPool 
-    OP_CONSTANT,        // load the constant from ConstantPool
+    // OP_CONSTANT_LONG,   // the same as OP_CONSTANT but with the index exceeded to three bytes.
+    OP_CONSTANT,        // load the value from ConstantPool and push it onto the stack
+    OP_ADD,
+    OP_SUBTRACT,
+    OP_MULTIPLY,
+    OP_DIVIDE,
+    OP_NEGATE,          // unary negation. Inverts the sign of the value
     OP_RETURN,          // return from function/method call
 }OpCode;
 
@@ -26,7 +31,7 @@ typedef struct
     int count;      // actual number of elements in 'code' array
     int capacity;   // the length of 'code' array
     uint8_t *code;  // array of bytecodes
-    int *lines;     // trances lines of bytecodes. Used in case runtime error occured.
+    int *lines;     // traces lines of bytecodes. Used in case runtime error occured.
     ConstantPool constantPool;
 }Bytecode;
 

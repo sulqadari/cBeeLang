@@ -6,6 +6,7 @@
         "xtr1common": "c",
         "bytecode.h": "c",
         "memory.h": "c",
-        "common.h": "c"
+        "common.h": "c",
+        "vm.h": "c"
     }
 }

@@ -12,19 +12,19 @@ void disassembleBytecode(Bytecode *bytecode, const char *name)
     }
 }
 
-static int lconstantInstruction(const char *name, Bytecode *bytecode, int offset)
-{
-    // fetch OP_CONSTANT_LONG's operand which resides at three subsequent bytes.
-    uint32_t constant = (uint16_t)((((uint16_t)bytecode->code[offset + 1]) << 16) |
-                                   (((uint16_t)bytecode->code[offset + 2]) <<  8) |
-                                     (uint16_t)bytecode->code[offset + 3]);
+// static int lconstantInstruction(const char *name, Bytecode *bytecode, int offset)
+// {
+//     // fetch OP_CONSTANT_LONG's operand which resides at three subsequent bytes.
+//     uint32_t constant = (uint16_t)((((uint16_t)bytecode->code[offset + 1]) << 16) |
+//                                    (((uint16_t)bytecode->code[offset + 2]) <<  8) |
+//                                      (uint16_t)bytecode->code[offset + 3]);
 
-    // print "OP_CONSTANT" and operand's value
-    printf("%-16s %4d '", name, constant);
-    // print the constant at index 'constant' in ConstantPool
-    printValue(bytecode->constantPool.constants[constant]);
-    return offset + 4;
-}
+//     // print "OP_CONSTANT" and operand's value
+//     printf("%-16s %4d '", name, constant);
+//     // print the constant at index 'constant' in ConstantPool
+//     printValue(bytecode->constantPool.constants[constant]);
+//     return offset + 4;
+// }
 
 static int constantInstruction(const char *name, Bytecode *bytecode, int offset)
 {
@@ -65,10 +65,20 @@ int disassembleInstruction(Bytecode *bytecode, int offset)
     uint8_t instruction = bytecode->code[offset];
     switch (instruction)
     {
-        case OP_CONSTANT_LONG:
-            return lconstantInstruction("OP_CONSTANT_LONG", bytecode, offset);
+        // case OP_CONSTANT_LONG:
+        //     return lconstantInstruction("OP_CONSTANT_LONG", bytecode, offset);
         case OP_CONSTANT:
             return constantInstruction("OP_CONSTANT", bytecode, offset);
+        case OP_ADD:
+            return simpleInstruction("OP_ADD", offset);
+        case OP_SUBTRACT:
+            return simpleInstruction("OP_SUBTRACT", offset);
+        case OP_MULTIPLY:
+            return simpleInstruction("OP_MULTIPLY", offset);
+        case OP_DIVIDE:
+            return simpleInstruction("OP_DIVIDE", offset);
+        case OP_NEGATE:
+            return simpleInstruction("OP_NEGATE", offset);
         case OP_RETURN:
             return simpleInstruction("OP_RETURN", offset);
         default:
