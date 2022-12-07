@@ -1,9 +1,16 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "../include/common.h"
+#include "../include/compiler.h"
 #include "../include/debug.h"
 #include "../include/vm.h"
 
 VM vm;
+
+/*
+  The core function which intended to interpret bytecode and output result.
+*/
+static InterpretResult run(void);
 
 static void resetStack(void)
 {
@@ -22,12 +29,22 @@ void freeVM(void)
 
 void push(Double value)
 {
+    if ((vm.stackTop - vm.stack) >= (STACK_MAX * sizeof(Double)))
+    {
+        exit(STACK_OVERFLOW);
+    }
+
     *vm.stackTop = value;
     vm.stackTop++;
 }
 
 Double pop(void)
 {
+    if (((int64_t)vm.stackTop - (int64_t)vm.stack) < 0)
+    {
+        exit(STACK_UNDERFLOW);
+    }
+
     vm.stackTop--;
     return *vm.stackTop;
 }
@@ -90,9 +107,8 @@ static InterpretResult run(void)
 #undef BINARY_OP
 }
 
-InterpretResult interpret(Bytecode *bytecode)
+InterpretResult interpret(const char *source)
 {
-    vm.bytecode = bytecode;
-    vm.ip = vm.bytecode->code;
-    return run();
+    compile(source);
+    return INTERPRET_OK;
 }

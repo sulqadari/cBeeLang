@@ -18,14 +18,32 @@ typedef enum
 {
     INTERPRET_OK,
     INTERPRET_COMPILE_ERROR,
-    INTERPRET_RUNTIME_ERROR
+    INTERPRET_RUNTIME_ERROR,
+    STACK_OVERFLOW,
+    STACK_UNDERFLOW,
 }InterpretResult;
 
 
 void initVM(void);
 void freeVM(void);
-InterpretResult interpret(Bytecode *bytecode);
+
+/*
+  -= vm.h =-
+  VM's entry point.
+  This function scans, parses and interprets source code.
+*/
+InterpretResult interpret(const char *source);
+
+/*
+  -= vm.h =-
+  Pushes a value onto the stack.
+*/
 void push(Double value);
+
+/* 
+  -= vm.h =-
+  Remvoes a value from the stack.
+*/
 Double pop(void);
 
 #endif  //_H_BEELANG_VM

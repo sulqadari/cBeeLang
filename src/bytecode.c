@@ -27,8 +27,9 @@ void appendBytecode(Bytecode *bytecode, uint8_t byte, int line)
         int oldCapacity = bytecode->capacity;
         
         bytecode->capacity = INCREASE_CAPACITY(oldCapacity);
-        bytecode->lines = INCREASE_CAPACITY(oldCapacity);
         bytecode->code = INCREASE_ARRAY(uint8_t, bytecode->code,
+                                        oldCapacity, bytecode->capacity);
+        bytecode->lines = INCREASE_ARRAY(int, bytecode->lines,
                                         oldCapacity, bytecode->capacity);
         
     }

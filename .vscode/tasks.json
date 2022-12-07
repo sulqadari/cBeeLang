@@ -22,7 +22,7 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "компилятор: C:\\msys64\\mingw64\\bin\\gcc.exe"
+            "detail": "compiler: C:\\msys64\\mingw64\\bin\\gcc.exe"
         }
     ]
 }

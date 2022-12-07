@@ -7,6 +7,10 @@
         "bytecode.h": "c",
         "memory.h": "c",
         "common.h": "c",
-        "vm.h": "c"
+        "vm.h": "c",
+        "scanner.h": "c",
+        "bit": "c",
+        "exception": "c",
+        "limits": "c"
     }
 }
