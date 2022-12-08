@@ -5,6 +5,7 @@
 #include "value.h"
 
 /*
+    -= bytecode.h =-
     Almost all instructions have a one-byte operation code
     universally shortened to opcode.
 
@@ -24,6 +25,7 @@ typedef enum
 }OpCode;
 
 /*
+    -= bytecode.h =-
     Bytecode - is a series of instructions.
 */
 typedef struct
@@ -36,17 +38,20 @@ typedef struct
 }Bytecode;
 
 /*
+    -= bytecode.h =-
     Sets the fields of 'Bytecode' structure to zero and NULL.
 */
 void initBytecode(Bytecode *bytecode);
 
 /*
+    -= bytecode.h =-
     Deallocates all of the memory and calls initBytecode() function to set
     Bytecode to initial state.
 */
 void freeBytecode(Bytecode *bytecode);
 
 /*
+    -= bytecode.h =-
     Appends one bytecode to the end of the 'Bytecode.code' array 
     at a time.
     If 'Bytecode.code' array haven't enough room for the new bytecode,
@@ -58,6 +63,7 @@ void freeBytecode(Bytecode *bytecode);
 void appendBytecode(Bytecode *bytecode, uint8_t byte, int line);
 
 /*
+    -= bytecode.h =-
     Convenience function to add a new constant to ConstantPool inside this module
     directly.
     @returns index of constant being appended.
@@ -65,6 +71,7 @@ void appendBytecode(Bytecode *bytecode, uint8_t byte, int line);
 int addConstant(Bytecode *bytecode, Double value);
 
 /*
+    -= bytecode.h =-
     Adds constant to Bytecode.ConstantPool and then writes an appropriate instruction
     to load the constant.
 */

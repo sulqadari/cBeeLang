@@ -19,6 +19,13 @@ void initScanner(const char *source)
     scanner.line = 1;
 }
 
+static bool isAlpha(char c)
+{
+    return (c >= 'a' && c <= 'z') ||
+           (c >= 'A' && c <= 'Z') ||
+            c == '_';
+}
+
 static bool isDigit(char c)
 {
     return (c >= '0') && (c <= '9');
@@ -102,7 +109,7 @@ static void skipWhitespace(void)
         char c = peek();
         switch (c)
         {
-            case ' ':
+            case ' ' :
             case '\r':
             case '\t':
                 advance();
@@ -111,7 +118,7 @@ static void skipWhitespace(void)
                 scanner.line++;
                 advance();
             break;
-            case '/':
+            case '/' :
                 if (peekNext() == '/')
                 {
                     // A comment goes until the end of the line.
@@ -127,6 +134,80 @@ static void skipWhitespace(void)
     }
 }
 
+
+static TokenType checkKeyword(int start, int length, const char* rest, TokenType type)
+{
+        // The lexeme must be exactly as long as the keyword    and
+    if (((scanner.current - scanner.start) == (start + length)) &&
+        // the remaining characters must match exactly.
+        (memcmp(scanner.start + start, rest, length) == 0))
+    {
+        return type;
+    }
+    // otherwise, we deal with user defined identifier.
+    return TOKEN_IDENTIFIER;
+}
+
+/*
+    Inplements the "trie" - a special case of DFA (deterministic finite automaton).
+    Each string the trie 'contains' is represented as a path through the tree
+    of character nodes of reserved words.
+
+    If string under examination is "android", then switch statement enters case 'a'
+    and performs the next checking: are we deal with reserved "and"? If we are, then
+    lexeme's length must be equal 3-1 ('a' character is already have been consumed,
+    so the rest of the word should be 2 chars length only).
+*/
+static TokenType identifierType(void)
+{
+    switch (scanner.start[0])
+    {
+        case 'a': return checkKeyword(1, 2, "nd", TOKEN_AND);
+        case 'c': return checkKeyword(1, 4, "lass", TOKEN_CLASS);
+        case 'e': return checkKeyword(1, 3, "lse", TOKEN_ELSE);
+        case 'f':
+            // may be 'f' is the only character? (consider "var f = 0.2;")
+            if (scanner.current - scanner.start > 1)
+            {
+                switch (scanner.start[1])
+                {
+                    case 'a': return checkKeyword(2, 3, "lse", TOKEN_FALSE);
+                    case 'o': return checkKeyword(2, 1, "r", TOKEN_FOR);
+                    case 'u': return checkKeyword(2, 1, "n", TOKEN_FUN);
+                }
+            }
+        break;
+        case 'i': return checkKeyword(1, 1, "f", TOKEN_IF);
+        case 'n': return checkKeyword(1, 2, "il", TOKEN_NIL);
+        case 'o': return checkKeyword(1, 1, "r", TOKEN_OR);
+        case 'p': return checkKeyword(1, 4, "rint", TOKEN_PRINT);
+        case 'r': return checkKeyword(1, 5, "eturn", TOKEN_RETURN);
+        case 's': return checkKeyword(1, 4, "uper", TOKEN_SUPER);
+        case 't':
+            // may be 't' is the only character? (consider "var t = 10;")
+            if (scanner.current - scanner.start > 1)
+            {
+                switch (scanner.start[1])
+                {
+                    case 'h': return checkKeyword(2, 2, "is", TOKEN_THIS);
+                    case 'r': return checkKeyword(2, 2, "ue", TOKEN_TRUE);
+                }
+            }
+        break;
+        case 'v': return checkKeyword(1, 2, "ar", TOKEN_VAR);
+        case 'w': return checkKeyword(1, 4, "hile", TOKEN_WHILE);
+  }
+    return TOKEN_IDENTIFIER;
+}
+
+static Token identifier(void)
+{
+    while (isAlpha(peek()) || isDigit(peek()))
+        advance();
+    
+    return makeToken(identifierType());
+}
+
 static Token number(void)
 {
     while (isDigit(peek()))
@@ -135,7 +216,7 @@ static Token number(void)
     // Look for a fractional part.
     if ((peek() == '.') && isDigit(peekNext()))
     {
-        // Consume the ".".
+        // Consume the "."
         advance();
 
         while (isDigit(peek()))
@@ -175,10 +256,14 @@ Token scanToken(void)
 
     char c = advance();
     
+    if (isAlpha(c))
+        return identifier();
+    
     if (isDigit(c))
         return number();
     
-    switch (c) {
+    switch (c)
+    {
         case '(': return makeToken(TOKEN_LEFT_PAREN);
         case ')': return makeToken(TOKEN_RIGHT_PAREN);
         case '{': return makeToken(TOKEN_LEFT_BRACE);

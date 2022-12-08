@@ -6,6 +6,7 @@
 typedef double Double;
 
 /*
+    -= value.h =-
     The constant pool - is an array of constant data associated
     with each compiled file. Each chunk of bytecode will carry with
     it a list of values that appear as literals in the program.
@@ -20,23 +21,27 @@ typedef struct
     Double *constants;
 }ConstantPool;
 
-/*
+/*  
+    -= value.h =-
     Sets the fields of 'ConstantPool' structure to zero and NULL.
 */
 void initConstantPool(ConstantPool *constantPool);
 
 /*
+    -= value.h =-
     Deallocates all of the memory and calls initConstantPool() function to set
     ConstantPool to initial state.
 */
 void freeConstantPool(ConstantPool *constantPool);
 
 /*
+    -= value.h =-
     Prints a given value. Used for debugging purposes
 */
 void printValue(Double value);
 
 /*
+    -= value.h =-
     Appends one constant to the end of the 'ConstantPool.constants' array 
     at a time.
     If 'ConstantPool.constants' array haven't enough room for the new value,

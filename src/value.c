@@ -2,6 +2,7 @@
 #include "../include/memory.h"
 #include "../include/value.h"
 
+
 void initConstantPool(ConstantPool *constantPool)
 {
     constantPool->count = 0;
@@ -20,9 +21,10 @@ void printValue(Double value)
     printf("%g", value);
 }
 
+
 void appendConstant(ConstantPool *constantPool, Double constant)
 {
-    //Increase array's capacity if there is no space for the next constant
+    // Increase array's capacity if there is no space for the next constant
     if (constantPool->capacity < constantPool->count + 1)
     {
         int oldCapacity = constantPool->capacity;

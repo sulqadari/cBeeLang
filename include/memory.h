@@ -4,11 +4,13 @@
 #include "common.h"
 
 /*
+    -= memory.h =-
     Calculates a new capacity based on a given current capacity
 */
 #define INCREASE_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity) * 2)
 
 /*
+    -= memory.h =-
     Computes the size of the array's element type and casting resulting *void
     back to a pointer of the right type and passes all these params to reallocate()
     function.
@@ -18,6 +20,7 @@
         sizeof(type) * (newCount))
 
 /*
+    -= memory.h =-
     Deallocates memory.
     @param type the type of array's elements
     @param pointer an array to be freed.
@@ -29,6 +32,7 @@
         reallocate(pointer, sizeof(type) * (oldCount), 0)
 
 /*
+    -= memory.h =-
     Handles dynamic memory management:
     - allocation;
     - deallocation;
