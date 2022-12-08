@@ -109,6 +109,20 @@ static InterpretResult run(void)
 
 InterpretResult interpret(const char *source)
 {
-    compile(source);
-    return INTERPRET_OK;
+    Bytecode bytecode;
+    initBytecode(&bytecode);
+
+    if (!compile(source, &bytecode))
+    {
+        freeBytecode(&bytecode);
+        return INTERPRET_COMPILE_ERROR;
+    }
+
+    vm.bytecode = &bytecode;
+    vm.ip = vm.bytecode->code;
+
+    InterpretResult result = run();
+
+    freeBytecode(&bytecode);
+    return result;
 }

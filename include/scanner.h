@@ -24,10 +24,11 @@ typedef enum {
 } TokenType;
 
 /*
-  Note: the 'start' pointer points to the substring of the source code string.
-  Thus, current implementation requires us to ensure that source string outlives all
-  of the tokens. That's why runFile() function doesn't free the string until
-  interpret() finishes executing the code and returns.
+    -= scanner.h =-
+    Note: the 'start' pointer points to the substring of the source code string.
+    Thus, current implementation requires us to ensure that source string outlives all
+    of the tokens. That's why runFile() function doesn't free the string until
+    interpret() finishes executing the code and returns.
 */
 typedef struct
 {
@@ -37,10 +38,15 @@ typedef struct
     int line;           // line number
 } Token;
 
+/*
+    -= scanner.h =-
+    Sets the Scanner to initial state (all fields are zeored out)
+*/
 void initScanner(const char *source);
 
 /*
-  Scans a complete token.
+    -= scanner.h =-
+    Scans a complete token.
 */
 Token scanToken(void);
 

@@ -11,6 +11,7 @@
         "scanner.h": "c",
         "bit": "c",
         "exception": "c",
-        "limits": "c"
+        "limits": "c",
+        "compiler.h": "c"
     }
 }
