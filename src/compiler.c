@@ -17,8 +17,37 @@ typedef struct
     bool panicMode; // Prevents from error cascades. Ends at synchronization point.
 } Parser;
 
+typedef enum
+{
+    PREC_NONE,
+    PREC_ASSIGNMENT,  // =
+    PREC_OR,          // or
+    PREC_AND,         // and
+    PREC_EQUALITY,    // == !=
+    PREC_COMPARISON,  // < > <= >=
+    PREC_TERM,        // + -
+    PREC_FACTOR,      // * /
+    PREC_UNARY,       // ! -
+    PREC_CALL,        // . ()
+    PREC_PRIMARY
+} Precedence;
+
+typedef void (*ParseFn)();
+
+typedef struct
+{
+    ParseFn prefix;
+    ParseFn infix;
+    Precedence precedence;
+} ParseRule;
+
 Parser parser;
 Bytecode *compilingBytecode;
+
+static void parsePresedence(Precedence precedence);
+static void expression(void);
+static void binary(void);
+static ParseRule* getRule(TokenType type);
 
 static Bytecode* currentBytecode(void)
 {
@@ -37,7 +66,7 @@ static void errorAt(Token *token, const char *message)
 
     if (token->type == TOKEN_EOF)
     {
-        fpintf(stderr, " at end");
+        fprintf(stderr, " at end");
     }else if (token->type == TOKEN_ERROR)
     {
         // do nothing
@@ -92,7 +121,7 @@ static void advance(void)
 }
 
 /*
-    Validates successive token againt control TokenType
+    Validates successive token against control TokenType
     and advances parser.current.
 */
 static void consume(TokenType type, const char *message)
@@ -113,7 +142,7 @@ static void consume(TokenType type, const char *message)
 /**
     Appends a single byte to the Bytecode.code.
     This function writes the given byte, which may be an opcode or
-    an operand to an instruction.
+    an operand to an instruction array.
     @param uint8_t
 */
 static void emitByte(uint8_t byte)
@@ -172,10 +201,7 @@ static void endCompiler(void)
     emitReturn();
 }
 
-
-//================================================================================
-//              PARSING PREFIX EXPRESSIONS
-//================================================================================
+/////////////////////////////////////////////////////////////
 
 /*
     Parentheses expression.
@@ -196,10 +222,27 @@ static void number(void)
     emitConstant(value);
 }
 
+/*
+    Parses unary prefix expressions.
+    This function assumes that target token is already resides
+    in Parser.previous field.
+    First this function compiles the operand and only after emits
+    appropriate bytecode.
+    
+    It might seem a little weird to write to the Bytecode.code the
+    negate instruction first and relative bytecode (e.g. OP_NEGATE) only after him.
+    But observing the terms of order of execution reveals that:
+    1. We evaluate the operand first which leaves its value on the stack.
+    2. Then we pop that value, negate it, and push the result.
+
+    After all, this is the compiler's job - parsing the program in the order it
+    appears in the source code and rearranging it into the order that
+    execution happens.
+*/
 static void unary(void)
 {
     TokenType operatorType = parser.previous.type;
-    expression();   // conpile the operand
+    parsePresedence(PREC_UNARY);   // compile the operand
 
     //Emit the operator instruction
     switch (operatorType)
@@ -209,9 +252,82 @@ static void unary(void)
     }
 }
 
-static void expression(void)
+static void binary(void)
+{
+    TokenType operatorType = parser.previous.type;
+    ParseRule *rule = getRule(operatorType);
+    parsePresedence((Precedence)(rule->precedence + 1));
+
+    switch(operatorType)
+    {
+        case TOKEN_PLUS:    emitByte(OP_ADD);      break;
+        case TOKEN_MINUS:   emitByte(OP_SUBTRACT); break;
+        case TOKEN_STAR:    emitByte(OP_MULTIPLY); break;
+        case TOKEN_SLASH:   emitByte(OP_DIVIDE);   break;
+        default: return;    //unreachable
+    }
+}
+
+
+ParseRule rules[] = {
+    [TOKEN_LEFT_PAREN]    = {grouping, NULL,   PREC_NONE},
+    [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_LEFT_BRACE]    = {NULL,     NULL,   PREC_NONE}, 
+    [TOKEN_RIGHT_BRACE]   = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_COMMA]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_DOT]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_MINUS]         = {unary,    binary, PREC_TERM},
+    [TOKEN_PLUS]          = {NULL,     binary, PREC_TERM},
+    [TOKEN_SEMICOLON]     = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_SLASH]         = {NULL,     binary, PREC_FACTOR},
+    [TOKEN_STAR]          = {NULL,     binary, PREC_FACTOR},
+    [TOKEN_BANG]          = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_BANG_EQUAL]    = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_EQUAL]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_EQUAL_EQUAL]   = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_GREATER]       = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_GREATER_EQUAL] = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_LESS]          = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_LESS_EQUAL]    = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_IDENTIFIER]    = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_STRING]        = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
+    [TOKEN_AND]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_CLASS]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_ELSE]          = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_FALSE]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_FOR]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_FUN]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_IF]            = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_NIL]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_OR]            = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_THIS]          = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_TRUE]          = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_WHILE]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_ERROR]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_EOF]           = {NULL,     NULL,   PREC_NONE},
+};
+
+/*
+    Parses any expression at the given precedence level or higher.
+*/
+static void parsePresedence(Precedence precedence)
 {
 
+}
+
+static ParseRule* getRule(TokenType type)
+{
+    return &rules[type];
+}
+
+static void expression(void)
+{
+    parsePresedence(PREC_ASSIGNMENT);
 }
 
 bool compile(const char *source, Bytecode *bytecode)
