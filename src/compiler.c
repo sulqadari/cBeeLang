@@ -5,10 +5,14 @@
 #include "../include/compiler.h"
 #include "../include/scanner.h"
 
-//================================================================================
-//              FRONT END: PARSER AND CORRESPONDING FUNCTIONS
-//================================================================================
+#ifdef DEBUG_PRINT_BYTECODE
+#include "../include/debug.h"
+#endif
 
+/**
+ * Keeps track of current and previous tokens
+ * being scanned
+*/
 typedef struct
 {
     Token current;
@@ -43,11 +47,6 @@ typedef struct
 
 Parser parser;
 Bytecode *compilingBytecode;
-
-static void parsePresedence(Precedence precedence);
-static void expression(void);
-static void binary(void);
-static ParseRule* getRule(TokenType type);
 
 static Bytecode* currentBytecode(void)
 {
@@ -135,14 +134,10 @@ static void consume(TokenType type, const char *message)
     errorAtCurrent(message);
 }
 
-//================================================================================
-//              BACK END: COMPILER AND CORRESPONDING FUNCTIONS
-//================================================================================
-
 /**
     Appends a single byte to the Bytecode.code.
     This function writes the given byte, which may be an opcode or
-    an operand to an instruction array.
+    an operand, to an instruction array.
     @param uint8_t
 */
 static void emitByte(uint8_t byte)
@@ -167,11 +162,12 @@ static void emitReturn(void)
     emitByte(OP_RETURN);
 }
 
+
 /**
     Appends constant to Constant pool.
     @returns uint8_t index in Constant pool.
 */
-static uint8_t makeConstant(Double value)
+static uint8_t makeConstant(Value value)
 {
     int index = addConstant(currentBytecode(), value);
     if (index > UINT8_MAX)
@@ -184,13 +180,14 @@ static uint8_t makeConstant(Double value)
 }
 
 /*
-    Wrapper function which at first adds the value to the Constant pool,
-    then emits OP_CONSTANT and index within ConstantPool in Bytecode array. 
+   Load the given value to the Constant pool and adds OP_CONSTANT
+   instruction to Bytecode array.
 */
-static void emitConstant(Double value)
+static void emitConstant(Value value)
 {
     emitBytes(OP_CONSTANT, makeConstant(value));
 }
+
 /*
     Wrapper function.
     Calls the function which appends OP_RETURN opcode at the end of compile()
@@ -199,9 +196,46 @@ static void emitConstant(Double value)
 static void endCompiler(void)
 {
     emitReturn();
+#ifdef DEBUG_PRINT_BYTECODE
+    if (!parser.hadError)
+    {
+        disassembleBytecode(currentBytecode(), "--== code ==--");
+        //disassembleBytecode
+    }
+#endif
 }
 
-/////////////////////////////////////////////////////////////
+static void expression(void);
+static ParseRule* getRule(TokenType type);
+static void parsePrecedence(Precedence precedence);
+
+static void binary(void)
+{
+    TokenType operatorType = parser.previous.type;
+
+    ParseRule *rule = getRule(operatorType);
+
+    // Eahc binary operator's right-hand operand precedence is one
+    // level higher that its own. Using that, we call below mentioned
+    // function with one level higher that current operator's level.
+    // We one higher level of precedence for the right operand because the binary
+    // operators are left-associative. Given a series of the same operator,
+    // like:  1 + 2 + 3 + 4, we eant to parse it like: ((1 + 2) + 3) + 4.
+    // Thus, when parsing the right-hand operand to the first +, we want to
+    // consume the 2, but not the rest, so we use one level above +'s precedence.
+    // But to parse the right-associative expressions (assignment), we would
+    // call this function with the same precedence. 
+    parsePrecedence((Precedence)(rule->precedence + 1));
+
+    switch(operatorType)
+    {
+        case TOKEN_PLUS:    emitByte(OP_ADD);      break;
+        case TOKEN_MINUS:   emitByte(OP_SUBTRACT); break;
+        case TOKEN_STAR:    emitByte(OP_MULTIPLY); break;
+        case TOKEN_SLASH:   emitByte(OP_DIVIDE);   break;
+        default: return;    //unreachable
+    }
+}
 
 /*
     Parentheses expression.
@@ -216,6 +250,11 @@ static void grouping(void)
     consume(TOKEN_RIGHT_PAREN, "')' token expected after expression");
 }
 
+/**
+ * Compiles number literals.
+ * This function assumes that token for the number literal
+ * has already been consumed and is stored in Parser.previous Token.
+*/
 static void number(void)
 {
     double value = strtod(parser.previous.start, NULL);
@@ -242,7 +281,9 @@ static void number(void)
 static void unary(void)
 {
     TokenType operatorType = parser.previous.type;
-    parsePresedence(PREC_UNARY);   // compile the operand
+
+    // compile the operand
+    parsePrecedence(PREC_UNARY);
 
     //Emit the operator instruction
     switch (operatorType)
@@ -252,23 +293,13 @@ static void unary(void)
     }
 }
 
-static void binary(void)
-{
-    TokenType operatorType = parser.previous.type;
-    ParseRule *rule = getRule(operatorType);
-    parsePresedence((Precedence)(rule->precedence + 1));
-
-    switch(operatorType)
-    {
-        case TOKEN_PLUS:    emitByte(OP_ADD);      break;
-        case TOKEN_MINUS:   emitByte(OP_SUBTRACT); break;
-        case TOKEN_STAR:    emitByte(OP_MULTIPLY); break;
-        case TOKEN_SLASH:   emitByte(OP_DIVIDE);   break;
-        default: return;    //unreachable
-    }
-}
-
-
+/**
+ * Array of function pointers.
+ * 
+ * The indexes in the array correspond to the TokenType enum
+ * values, and the function at each index is the code to compile
+ * an expression of that token type.
+*/
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN]    = {grouping, NULL,   PREC_NONE},
     [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,   PREC_NONE},
@@ -313,11 +344,34 @@ ParseRule rules[] = {
 };
 
 /*
-    Parses any expression at the given precedence level or higher.
+    Orchestrates all of the parsing functions.
+    This function starts at the current token and parses any expression
+    at the given precedence level or higher. It uses table of parsing
+    function pointers.
 */
-static void parsePresedence(Precedence precedence)
+static void parsePrecedence(Precedence precedence)
 {
+    // read next token.
+    advance();
+    // look up corresponding ParseRule.
+    ParseFn prefixRule = getRule(parser.previous.type)->prefix;
+    if (prefixRule == NULL)
+    {
+        error("An expression expected.");
+        return;
+    }
+    // does its stuff and compiles the rest of the prefix expression.
+    prefixRule();
 
+    // compiling the infix expressions.
+    // If the next token is too low precedence, or isn’t an infix
+    // operator at all, we’re done.
+    while (precedence <= getRule(parser.current.type)->precedence)
+    {
+        advance(); // if so, consume current token.
+        ParseFn infixRule = getRule(parser.previous.type)->infix;
+        infixRule();
+    }
 }
 
 static ParseRule* getRule(TokenType type)
@@ -327,7 +381,7 @@ static ParseRule* getRule(TokenType type)
 
 static void expression(void)
 {
-    parsePresedence(PREC_ASSIGNMENT);
+    parsePrecedence(PREC_ASSIGNMENT);
 }
 
 bool compile(const char *source, Bytecode *bytecode)

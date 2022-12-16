@@ -27,9 +27,9 @@ void freeVM(void)
 
 }
 
-void push(Double value)
+void push(Value value)
 {
-    if ((vm.stackTop - vm.stack) >= (STACK_MAX * sizeof(Double)))
+    if ((vm.stackTop - vm.stack) >= (STACK_MAX * sizeof(Value)))
     {
         exit(STACK_OVERFLOW);
     }
@@ -38,7 +38,7 @@ void push(Double value)
     vm.stackTop++;
 }
 
-Double pop(void)
+Value pop(void)
 {
     if (((int64_t)vm.stackTop - (int64_t)vm.stack) < 0)
     {
@@ -62,10 +62,10 @@ static InterpretResult run(void)
 
     for (;;)
     {
-#ifdef DEBUG_TRACE_EXECUTION
+#ifdef DEBUG_TRACE_VM
         // stack trace start
         printf("          ");
-        for (Double* slot = vm.stack; slot < vm.stackTop; slot++)
+        for (Value* slot = vm.stack; slot < vm.stackTop; slot++)
         {
             printf("[ ");
             printValue(*slot);
@@ -75,14 +75,14 @@ static InterpretResult run(void)
         // stack trace end
 
         disassembleInstruction(vm.bytecode, (int)(vm.ip - vm.bytecode->code));
-#endif //DEBUG_TRACE_EXECUTION
+#endif //DEBUG_TRACE_VM
 
         uint8_t instruction;
         switch (instruction = READ_BYTE())
         {
             case OP_CONSTANT:
             {
-                Double constant = READ_CONSTANT();
+                Value constant = READ_CONSTANT();
                 push(constant);
             }break;
             case OP_ADD:BINARY_OP(+); break;

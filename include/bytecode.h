@@ -68,13 +68,13 @@ void appendBytecode(Bytecode *bytecode, uint8_t byte, int line);
     directly.
     @returns index of constant being appended.
 */
-int addConstant(Bytecode *bytecode, Double value);
+int addConstant(Bytecode *bytecode, Value value);
 
 /*
     -= bytecode.h =-
     Adds constant to Bytecode.ConstantPool and then writes an appropriate instruction
     to load the constant.
 */
-//void writeConstant(Bytecode *byteCode, Double constant, int line);
+//void writeConstant(Bytecode *byteCode, Value constant, int line);
 
 #endif // _H_BEELANG_BYTECODE

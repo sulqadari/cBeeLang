@@ -39,7 +39,7 @@ void appendBytecode(Bytecode *bytecode, uint8_t byte, int line)
     bytecode->count++;
 }
 
-int addConstant(Bytecode *bytecode, Double value)
+int addConstant(Bytecode *bytecode, Value value)
 {
     appendConstant(&bytecode->constantPool, value);
     return bytecode->constantPool.count - 1;

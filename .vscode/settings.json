@@ -12,6 +12,7 @@
         "bit": "c",
         "exception": "c",
         "limits": "c",
-        "compiler.h": "c"
+        "compiler.h": "c",
+        "debug.h": "c"
     }
 }

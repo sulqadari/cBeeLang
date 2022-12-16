@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-typedef double Double;
+typedef double Value;
 
 /*
     -= value.h =-
@@ -18,7 +18,7 @@ typedef struct
 {
     int capacity;
     int count;
-    Double *constants;
+    Value *constants;
 }ConstantPool;
 
 /*  
@@ -38,7 +38,7 @@ void freeConstantPool(ConstantPool *constantPool);
     -= value.h =-
     Prints a given value. Used for debugging purposes
 */
-void printValue(Double value);
+void printValue(Value value);
 
 /*
     -= value.h =-
@@ -50,6 +50,6 @@ void printValue(Double value);
     The former doubles ConstantPool.capacity field and the latter
     increases 'ConstantPool.constants' by new value.
 */
-void appendConstant(ConstantPool *constantPool, Double constant);
+void appendConstant(ConstantPool *constantPool, Value constant);
 
 #endif // _H_BEELANG_VALUE

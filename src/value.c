@@ -12,17 +12,17 @@ void initConstantPool(ConstantPool *constantPool)
 
 void freeConstantPool(ConstantPool *constantPool)
 {
-    FREE_ARRAY(Double, constantPool->constants, constantPool->capacity);
+    FREE_ARRAY(Value, constantPool->constants, constantPool->capacity);
     initConstantPool(constantPool);
 }
 
-void printValue(Double value)
+void printValue(Value value)
 {
     printf("%g", value);
 }
 
 
-void appendConstant(ConstantPool *constantPool, Double constant)
+void appendConstant(ConstantPool *constantPool, Value constant)
 {
     // Increase array's capacity if there is no space for the next constant
     if (constantPool->capacity < constantPool->count + 1)
@@ -30,7 +30,7 @@ void appendConstant(ConstantPool *constantPool, Double constant)
         int oldCapacity = constantPool->capacity;
         
         constantPool->capacity = INCREASE_CAPACITY(oldCapacity);
-        constantPool->constants = INCREASE_ARRAY(Double, constantPool->constants,
+        constantPool->constants = INCREASE_ARRAY(Value, constantPool->constants,
                                         oldCapacity, constantPool->capacity);
         
     }

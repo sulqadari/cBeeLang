@@ -10,8 +10,8 @@ typedef struct
 {
     Bytecode *bytecode; // instruction set
     uint8_t *ip;        // instruction pointer
-    Double stack[STACK_MAX];
-    Double *stackTop;   // stack pointer
+    Value stack[STACK_MAX];
+    Value *stackTop;   // stack pointer
 }VM;
 
 typedef enum
@@ -38,12 +38,12 @@ InterpretResult interpret(const char *source);
   -= vm.h =-
   Pushes a value onto the stack.
 */
-void push(Double value);
+void push(Value value);
 
 /* 
   -= vm.h =-
   Remvoes a value from the stack.
 */
-Double pop(void);
+Value pop(void);
 
 #endif  //_H_BEELANG_VM
