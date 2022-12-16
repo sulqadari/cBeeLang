@@ -16,10 +16,17 @@ typedef enum
 {
     // OP_CONSTANT_LONG,   // the same as OP_CONSTANT but with the index exceeded to three bytes.
     OP_CONSTANT,        // load the value from ConstantPool and push it onto the stack
+    OP_NIL,
+    OP_TRUE,
+    OP_FALSE,
+    OP_EQUAL,
+    OP_GREATER,
+    OP_LESS,
     OP_ADD,
     OP_SUBTRACT,
     OP_MULTIPLY,
     OP_DIVIDE,
+    OP_NOT,
     OP_NEGATE,          // unary negation. Inverts the sign of the value
     OP_RETURN,          // return from function/method call
 }OpCode;
