@@ -1,21 +1,51 @@
-#include "../includes/common.h"
-#include "../includes/chunk.h"
-#include "../includes/debug.h"
-#include "../includes/vm.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-/**
- * @brief Stops execution. The analogous of system("pause") in C++
- * 
- */
-static void idle_exec()
+#include "../include/common.h"
+#include "../include/vm.h"
+
+/* Executes a single command line passed via console */
+static void repl(void);
+
+/*
+  Executes a script file, whose name is passed as an argument while (e.g. binch.exe script.txt)
+  @param path to script.
+*/
+static void runFile(const char *path);
+
+/*
+  Reads input script file into char* buffer.
+  @param path to script.
+  @returns buffer with input script.
+*/
+static char* readFile(const char *path);
+
+int main(int argc, const char* argv[])
 {
-    printf("Press any key to continue...");
-    getchar();
+    initVM();
+
+    if (argc == 1)
+    {
+        repl();
+    }else if (argc == 2)
+    {
+        runFile(argv[1]);
+    }else
+    {
+        fprintf(stderr, "Usage: binch.exe C:\\path\\to\\script.txt\n");
+        exit(64);
+    }
+    
+    freeVM();
+
+    return 0;
 }
 
-static void repl()
+static void repl(void)
 {
     char line[1024];
+    
     for (;;)
     {
         printf(">> ");
@@ -30,81 +60,48 @@ static void repl()
     }
 }
 
-static char* readFile(const char* path)
+static void runFile(const char *path)
 {
-    FILE * file = fopen(path, "rb");
+    char *source = readFile(path);
+    InterpretResult result = interpret(source);
+    free(source);
 
+    if (result == INTERPRET_COMPILE_ERROR) exit(65);
+    if (result == INTERPRET_RUNTIME_ERROR) exit(70);
+}
+
+static char* readFile(const char *path)
+{
+    FILE *file = fopen(path, "rb");
     if (NULL == file)
     {
         fprintf(stderr, "Couldn't open file \"%s\".\n", path);
         exit(74);
     }
 
-    fseek(file, 0L, SEEK_END);      // move file pointer to the very end
-    size_t fileSize = ftell(file);  // retrieve the value of the file's pointer
-    rewind(file);                   // roll back the file pointer to its very beginning.
-
-    char* buffer = (char*)malloc(fileSize + 1); // allocate string gor that size + '\0'
-
+    // shift file pointer (don't be confused with pointer to FILE) to the end of file
+    fseek(file, 0L, SEEK_END);
+    // fetch the index of file pointer. Its value determines the length of buffer to be created.
+    size_t fileSize = ftell(file);
+    // roll file pointer back so that we will read it from the start.
+    rewind(file);
+    // + 1 char for string terminating symbol ('\0')
+    char *buffer = (char*) malloc(fileSize + 1);
     if (NULL == buffer)
     {
         fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
         exit(74);
     }
-
-    /* Read from 'file' the 'fileSize' amount of values of size 'char' and store them into the 'buffer'.*/
+    // read input data into the buffer. Store in 'bytesRead' the actual number of characters.
     size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
-
-    // if we didn't succeed in reading the whole bunch of input data..
     if (bytesRead < fileSize)
     {
-        fprintf(stderr, "Error: Couldn't read file \"%s\".\n", path);
+        fprintf(stderr, "Couldn't read the whole data from the file \"%s\".\n", path);
         exit(74);
     }
 
-    buffer[bytesRead] = '\0';       // add string terminating character
+    buffer[bytesRead] = '\0';
 
     fclose(file);
     return buffer;
-}
-
-static void runFile(const char* path)
-{
-    char* source = readFile(path);
-    InterpretResult result = interpret(source);
-    
-    ///NOTE: crucially important: do not release source code until we done with interpretation!
-    free(source);
-
-    if (INTERPRET_COMPILE_ERROR == result) exit(65);
-    if (INTERPRET_RUNTIME_ERROR == result) exit(70);
-}
-
-/**
- * @brief Project entry point.
- * 
- * @param argc 
- * @param argv 
- * @return int 
- */
-int main(int argc, const char* argv[])
-{
-    initVM();   // create isntance of VM
-
-    if (argc == 1)
-    {
-        repl();
-    }else if (argc == 2)
-    {
-        runFile(argv[1]);
-    }else
-    {
-        fprintf(stderr, "Usage: BeeLang.exe [path\\to\\script]\n");
-        exit(64);
-    }
-
-    freeVM();   // kill VM
-
-    idle_exec();
-    return 0;
 }

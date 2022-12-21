@@ -1,9 +1,18 @@
 {
     "files.associations": {
-        "chunk.h": "c",
-        "common.h": "c",
-        "debug.h": "c",
+        "cstddef": "c",
         "value.h": "c",
-        "vm.h": "c"
+        "type_traits": "c",
+        "xtr1common": "c",
+        "bytecode.h": "c",
+        "memory.h": "c",
+        "common.h": "c",
+        "vm.h": "c",
+        "scanner.h": "c",
+        "bit": "c",
+        "exception": "c",
+        "limits": "c",
+        "compiler.h": "c",
+        "debug.h": "c"
     }
 }

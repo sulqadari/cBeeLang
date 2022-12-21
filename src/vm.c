@@ -1,100 +1,145 @@
+#include <stdarg.h>
 #include <stdio.h>
-#include "../includes/common.h"
-#include "../includes/vm.h"
-#include "../includes/debug.h"
-#include "../includes/compiler.h"
+#include <stdlib.h>
+#include "../include/common.h"
+#include "../include/compiler.h"
+#include "../include/debug.h"
+#include "../include/vm.h"
 
-
-/**
- * @brief The VM's Global Variable.
- * Instead of passing pointer to VM around functions,
- * the global instance is declared to keep code clearer.
- */
 VM vm;
 
-/**
- * @brief Set stackTop to point to the beginning of the array to indicate
- * that the stack is empty
- */
-static void resetStack()
+/*
+  The core function which intended to interpret bytecode and output result.
+*/
+static InterpretResult run(void);
+
+static void resetStack(void)
 {
     vm.stackTop = vm.stack;
 }
 
-void initVM()
+static void runtimeError(const char *format, ...)
+{
+    va_list args;
+
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputs("\n", stderr);
+
+    size_t instruction = vm.ip - vm.bytecode->code - 1;
+    int line = vm.bytecode->lines[instruction];
+    fprintf(stderr, "[line %d] in script\n", line);
+    resetStack();
+}
+
+void initVM(void)
 {
     resetStack();
 }
 
-void freeVM()
+void freeVM(void)
 {
 
 }
 
 void push(Value value)
 {
-    *vm.stackTop = value;   // dereference stackTop and assign it with value
-    vm.stackTop++;          // advance stackTop thus it would point to the next index in stack
+    if ((vm.stackTop - vm.stack) >= (STACK_MAX * sizeof(Value)))
+    {
+        exit(STACK_OVERFLOW);
+    }
+
+    *vm.stackTop = value;
+    vm.stackTop++;
 }
 
-Value pop()
+Value pop(void)
 {
+    if (((int64_t)vm.stackTop - (int64_t)vm.stack) < 0)
+    {
+        exit(STACK_UNDERFLOW);
+    }
+
     vm.stackTop--;
     return *vm.stackTop;
 }
 
-/**
- * @brief This is the core function of the VM.
- * 
- * @return InterpretResult 
- */
-static InterpretResult run()
+static Value peek(int idx)
 {
-    #define READ_BYTE() (*vm.ip++)  // advance instruction pointer
-    //lookup the corresponding Value in the chunk's constant pool
-    #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+    return vm.stackTop[-1 - idx];
+}
 
-    #define BINARY_OP(op) \
-        do { \
-            double b = pop(); \
-            double a = pop(); \
-            push(a op b); \
-        }while(false)
+static bool isFalsey(Value value)
+{
+    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+}
 
-    uint8_t instruction;
-    for(;;)
+static InterpretResult run(void)
+{
+#define READ_BYTE() (*vm.ip++)
+#define READ_CONSTANT() (vm.bytecode->constantPool.constants[READ_BYTE()])
+#define BINARY_OP(valueType, op) \
+    do { \
+        if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
+            runtimeError("Operands must be numbers."); \
+            return INTERPRET_RUNTIME_ERROR; \
+        } \
+        double b = AS_NUMBER(pop()); \
+        double a = AS_NUMBER(pop()); \
+        push(valueType(a op b)); \
+    } while (false)
+
+    for (;;)
     {
-#ifdef DEBUG_TRACE_EXECUTION
+#ifdef DEBUG_TRACE_VM
+        // stack trace start
         printf("          ");
-
-        for(Value* slot = vm.stack; slot < vm.stackTop; slot++)
+        for (Value* slot = vm.stack; slot < vm.stackTop; slot++)
         {
             printf("[ ");
             printValue(*slot);
             printf(" ]");
         }
         printf("\n");
+        // stack trace end
 
-        // vm.ip is incremented each time it goes through this loop.  
-        // convert vm.ip back to a relative offset from the beggining of the bytecode.
-        // using pointer math: current pointer - initial pointer
-        disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
-#endif
-        // instruction decoding:
-        // the body of each case implements opcode's behavior
+        disassembleInstruction(vm.bytecode, (int)(vm.ip - vm.bytecode->code));
+#endif //DEBUG_TRACE_VM
+
+        uint8_t instruction;
         switch (instruction = READ_BYTE())
         {
             case OP_CONSTANT:
-                Value constant = READ_CONSTANT();   // read opcode which follows OP_CONSTANT
+            {
+                Value constant = READ_CONSTANT();
                 push(constant);
+            }break;
+            case OP_NIL: push(NIL_VAL);                     break;
+            case OP_TRUE: push(BOOL_VAL(true));             break;
+            case OP_FALSE: push(BOOL_VAL(false));           break;
+            case OP_EQUAL:
+                Value b = pop();
+                Value a = pop();
+                push(BOOL_VAL(valuesEqual(a, b)));
             break;
-            case OP_ADD:        BINARY_OP(+);   break;
-            case OP_SUBTRACT:   BINARY_OP(-);   break;
-            case OP_MULTIPLY:   BINARY_OP(*);   break;
-            case OP_DIVIDE:     BINARY_OP(/);   break;
-            // pop the value from the stack and push negated value
-            // back on the stack for later instructions to use.
-            case OP_NEGATE:     push(-pop());   break;
+            case OP_GREATER: BINARY_OP(BOOL_VAL, >);        break;
+            case OP_LESS: BINARY_OP(BOOL_VAL, <);           break;
+            case OP_ADD:BINARY_OP(NUMBER_VAL, +);           break;
+            case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -);     break;
+            case OP_MULTIPLY: BINARY_OP(NUMBER_VAL, *);     break;
+            case OP_DIVIDE: BINARY_OP(NUMBER_VAL, /);       break;
+            case OP_NOT: push(BOOL_VAL(isFalsey(pop())));   break;
+            case OP_NEGATE:
+            {
+                if (!IS_NUMBER(peek(0)))
+                {
+                    runtimeError("Operand must be a number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                //push(-pop());
+                push(NUMBER_VAL(-AS_NUMBER(pop())));
+            }break;
             case OP_RETURN:
             {
                 printValue(pop());
@@ -104,37 +149,27 @@ static InterpretResult run()
         }
     }
 
-    #undef READ_BYTE
-    #undef READ_CONSTANT
-    #undef BINARY_OP
+#undef READ_BYTE
+#undef READ_CONSTANT
+#undef BINARY_OP
 }
 
-/**
- * @brief Helper function which actually runs the bytecode.
- * Within outer infinite for loop VM reads and executes a single bytecode
- * instruction.
- * The READ_BYTE macro reads the byte currently pointed at by ip and then
- * advances the instruction pointer.
- * @return InterpretResult 
- */
-InterpretResult interpret(const char* source)
+InterpretResult interpret(const char *source)
 {
-    Chunk chunk;
-    // init the chunk
-    initChunk(&chunk);
+    Bytecode bytecode;
+    initBytecode(&bytecode);
 
-    //pass it over to compiler
-    if (!compile(source, &chunk))
+    if (!compile(source, &bytecode))
     {
-        freeChunk(&chunk);
+        freeBytecode(&bytecode);
         return INTERPRET_COMPILE_ERROR;
     }
 
-    // send the completed chunk over to the VM to be executed.
-    vm.chunk = &chunk;
-    vm.ip = vm.chunk->code;
+    vm.bytecode = &bytecode;
+    vm.ip = vm.bytecode->code;
 
     InterpretResult result = run();
-    freeChunk(&chunk);
+
+    freeBytecode(&bytecode);
     return result;
 }
